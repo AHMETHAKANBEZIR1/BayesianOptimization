@@ -90,10 +90,16 @@ def test_int_parameters():
 @pytest.mark.parametrize("bounds", [(3_000_000_000, 3_000_000_010), (-3_000_000_010, -3_000_000_000), (0, 5)])
 def test_int_random_sample_large_bounds(bounds):
     parameter = IntParameter("x", bounds)
-    samples = parameter.random_sample(100, random_state=np.random.RandomState(42))
+    random_state = np.random.RandomState(42)
+    samples = parameter.random_sample(100, random_state=random_state)
     repeated = parameter.random_sample(100, random_state=np.random.RandomState(42))
     assert samples.dtype == np.dtype(float)
     np.testing.assert_array_equal(samples, repeated)
+    if bounds == (0, 5):
+        reference_state = np.random.RandomState(42)
+        expected = reference_state.randint(bounds[0], bounds[1] + 1, 100).astype(float)
+        np.testing.assert_array_equal(samples, expected)
+        np.testing.assert_array_equal(random_state.random_sample(10), reference_state.random_sample(10))
     assert np.all(samples >= bounds[0])
     assert np.all(samples <= bounds[1])
     assert np.all(samples == np.floor(samples))
